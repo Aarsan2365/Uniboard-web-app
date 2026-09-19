@@ -1,0 +1,16 @@
+# Environment variables
+backend/.env
+.env
+
+# Dependencies
+backend/node_modules/
+frontend/node_modules/
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor files
+.DS_Store
+.vscode/
