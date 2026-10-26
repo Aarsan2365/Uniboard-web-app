@@ -10,30 +10,18 @@ export default {
       },
       colors: {
         brand: {
-          50: '#f4f5ff',
-          100: '#e9ebff',
-          200: '#d5d8ff',
-          300: '#b2b8ff',
-          400: '#878eff',
-          500: '#6366f1', // Indigo primary
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+          50: '#fffbea',
+          100: '#fff4bd',
+          200: '#ffe87a',
+          300: '#ffdd3d',
+          400: '#ffd60a',
+          500: '#f5c400',
+          600: '#d4a900',
+          700: '#a78200',
+          800: '#7b6100',
+          900: '#554300',
+          950: '#2e2400',
         },
-        slate: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-        }
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out forwards',
@@ -42,22 +30,10 @@ export default {
         'pulse-subtle': 'pulseSubtle 2s infinite ease-in-out',
       },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(12px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        slideDown: {
-          '0%': { opacity: '0', transform: 'translateY(-12px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        pulseSubtle: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.6' },
-        },
+        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        slideUp: { '0%': { opacity: '0', transform: 'translateY(12px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+        slideDown: { '0%': { opacity: '0', transform: 'translateY(-12px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+        pulseSubtle: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.6' } },
       },
     },
   },

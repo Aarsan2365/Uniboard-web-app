@@ -1,22 +1,25 @@
-// services/api.js
-//
-// A single configured axios instance shared by every service file.
-// The request interceptor automatically attaches the stored JWT
-// (if we have one) to every outgoing request, so individual service
-// functions never have to think about auth headers.
-
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  headers: { 'Content-Type': 'application/json' },
 });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('uniboard_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('uniboard_token');
+      localStorage.removeItem('uniboard_user');
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

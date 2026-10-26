@@ -7,6 +7,8 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: { type: String, enum: ['admin', 'student'], default: 'student' },
     batch: { type: String, enum: ['2021', '2022', '2023', '2024', '2025', 'N/A'], default: 'N/A' },
+    resetPasswordToken: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
   },
   {
     timestamps: true,
@@ -15,6 +17,9 @@ const userSchema = new mongoose.Schema(
       transform: (_doc, ret) => {
         delete ret._id;
         delete ret.__v;
+        delete ret.password;
+        delete ret.resetPasswordToken;
+        delete ret.resetPasswordExpires;
         return ret;
       },
     },

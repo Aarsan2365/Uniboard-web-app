@@ -6,17 +6,17 @@
   blank create form. Keeps AdminPanelView from needing two components.
 -->
 <template>
-  <form @submit.prevent="handleSubmit" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-5 animate-slide-up">
-    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-      <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+  <form @submit.prevent="handleSubmit" class="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6 shadow-sm space-y-5 animate-slide-up">
+    <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+      <h3 class="text-lg font-bold text-[var(--text-main)] tracking-tight">
         {{ initialNotice ? 'Edit Announcement' : 'Post New Announcement' }}
       </h3>
-      <span class="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">Admin Only</span>
+      <span class="text-[10px] uppercase font-bold text-[var(--text-secondary)] bg-[var(--surface-soft)] px-2 py-0.5 rounded">Admin Only</span>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Title</label>
+        <label class="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Title</label>
         <input
           v-model="form.title"
           type="text"
@@ -27,7 +27,7 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Category</label>
+        <label class="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Announcement Category</label>
         <select
           v-model="form.category"
           class="premium-select"
@@ -39,7 +39,7 @@
 
     <!-- Target batch row -->
     <div>
-      <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+      <label class="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
         Target Batch
       </label>
       <div class="flex flex-wrap gap-2">
@@ -51,20 +51,20 @@
           :class="[
             'px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 active:scale-95',
             form.targetBatch === b.value
-              ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-              : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+              ? 'bg-[#FFD60A] text-[#0A0A0A] border-[#FFD60A] shadow-sm'
+              : 'bg-[var(--surface-soft)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[#FFD60A]' 
           ]"
         >
           {{ b.label }}
         </button>
       </div>
-      <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 pl-0.5">
+      <p class="text-[10px] text-[var(--text-muted)] mt-1.5 pl-0.5">
         'All Batches' broadcasts to every student. Pick a year to target only that cohort.
       </p>
     </div>
 
     <div>
-      <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Body Content</label>
+      <label class="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Body Content</label>
       <textarea
         v-model="form.body"
         required
@@ -75,18 +75,18 @@
     </div>
 
     <div>
-      <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+      <label class="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
         Image Attachment (optional)
       </label>
-      <div class="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-dashed rounded-lg">
+      <div class="flex items-center gap-4 p-3 bg-[var(--surface-soft)] border border-[var(--border)] border-dashed rounded-lg">
         <input
           type="file"
           accept="image/png,image/jpeg,image/webp,image/gif"
           @change="handleFileChange"
-          class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-md file:border-0 file:bg-brand-50 file:text-brand-700 file:text-xs file:font-semibold hover:file:bg-brand-100 cursor-pointer"
+          class="w-full text-xs text-[var(--text-secondary)] file:mr-3 file:py-1.5 file:px-3.5 file:rounded-md file:border-0 file:bg-[#FFD60A] file:text-[#0A0A0A] file:text-xs file:font-semibold hover:file:bg-brand-100 cursor-pointer"
         />
       </div>
-      <p v-if="initialNotice?.imageUrl && !form.image" class="text-xs text-slate-400 dark:text-slate-500 mt-1.5 pl-1">
+      <p v-if="initialNotice?.imageUrl && !form.image" class="text-xs text-[var(--text-muted)] mt-1.5 pl-1">
         Leave blank to preserve the existing image attachment.
       </p>
     </div>

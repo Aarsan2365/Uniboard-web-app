@@ -1,14 +1,3 @@
-// middlewares/validators.js
-//
-// Centralizes input validation rules using express-validator. Each
-// export is an array of checks + a final "handleValidation" step
-// that turns any failures into a consistent 400 response. Routes
-// just do: router.post('/', registerValidator, register)
-//
-// Validating here (rather than inline in controllers) keeps
-// controllers focused on business logic and makes the validation
-// rules easy to point to as a group in your viva.
-
 const { body, query, validationResult } = require('express-validator');
 
 const handleValidation = (req, res, next) => {
@@ -27,6 +16,7 @@ const registerValidator = [
   body('email').isEmail().withMessage('A valid email is required.').normalizeEmail(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
   body('role').optional().isIn(['admin', 'student']).withMessage('Role must be admin or student.'),
+  body('batch').optional().isIn(['2021', '2022', '2023', '2024', '2025', 'N/A']).withMessage('Invalid batch.'),
   handleValidation,
 ];
 
@@ -36,23 +26,25 @@ const loginValidator = [
   handleValidation,
 ];
 
+const forgotPasswordValidator = [
+  body('email').isEmail().withMessage('A valid email is required.').normalizeEmail(),
+  handleValidation,
+];
+
+const resetPasswordValidator = [
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
+  handleValidation,
+];
+
 const noticeValidator = [
   body('title').trim().notEmpty().withMessage('Title is required.').isLength({ max: 150 }),
   body('body').trim().notEmpty().withMessage('Body is required.'),
-  body('category')
-    .optional()
-    .isIn(['Exam Schedules', 'Sports', 'General', 'Events', 'Academic'])
-    .withMessage('Invalid category.'),
+  body('category').optional().isIn(['Exam Schedules', 'Sports', 'General', 'Events', 'Academic']).withMessage('Invalid category.'),
   handleValidation,
 ];
 
 const commentValidator = [
-  body('body')
-    .trim()
-    .notEmpty()
-    .withMessage('Comment cannot be empty.')
-    .isLength({ max: 500 })
-    .withMessage('Comment must be under 500 characters.'),
+  body('body').trim().notEmpty().withMessage('Comment cannot be empty.').isLength({ max: 500 }).withMessage('Comment must be under 500 characters.'),
   handleValidation,
 ];
 
@@ -65,6 +57,8 @@ const paginationValidator = [
 module.exports = {
   registerValidator,
   loginValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
   noticeValidator,
   commentValidator,
   paginationValidator,
