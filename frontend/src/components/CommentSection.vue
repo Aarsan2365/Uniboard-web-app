@@ -48,6 +48,7 @@
       <p v-if="comments.length === 0" class="text-xs text-[var(--text-muted)] pl-1">No comments posted yet. Be the first to start the discussion!</p>
     </div>
 
+    <p v-if="error" role="alert" class="text-sm text-red-500">{{ error }}</p>
     <form @submit.prevent="handleSubmit" class="flex gap-2 pt-1">
       <input
         v-model="newComment"
@@ -58,7 +59,7 @@
       />
       <button
         type="submit"
-        :disabled="!newComment.trim()"
+        :disabled="busy || !newComment.trim()"
         class="px-4 py-1.5 bg-[#FFD60A] hover:bg-[#FFEA70] text-[#0A0A0A] text-xs font-semibold rounded-lg shadow-sm disabled:opacity-40 disabled:pointer-events-none transition-all"
       >
         Post
@@ -77,6 +78,8 @@ const props = defineProps({
 });
 
 const comments = ref([]);
+const error = ref('');
+const busy = ref(false);
 const newComment = ref('');
 const loading = ref(true);
 const currentUser = authService.getCurrentUser();
@@ -85,25 +88,30 @@ const load = async () => {
   loading.value = true;
   try {
     comments.value = await commentService.getForNotice(props.noticeId);
-  } finally {
+  } catch (err) { error.value = err.response?.data?.message || err.message; } finally {
     loading.value = false;
   }
 };
 
 const canDelete = (comment) =>
-  currentUser?.role === 'admin' || comment.userId === currentUser?.id;
+  currentUser?.role === 'admin' || comment.author?.id === currentUser?.id;
 
 const handleSubmit = async () => {
   const body = newComment.value.trim();
-  if (!body) return;
+  if (!body || busy.value) return;
+  busy.value = true; error.value = '';
+  try {
   const created = await commentService.create(props.noticeId, body);
   comments.value.push(created);
   newComment.value = '';
+  } catch (err) { error.value = err.response?.data?.message || err.message; } finally { busy.value = false; }
 };
 
 const handleDelete = async (comment) => {
+  try {
   await commentService.remove(comment.id);
   comments.value = comments.value.filter((c) => c.id !== comment.id);
+  } catch (err) { error.value = err.response?.data?.message || err.message; }
 };
 
 onMounted(load);

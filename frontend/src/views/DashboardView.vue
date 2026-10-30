@@ -15,12 +15,13 @@
               Stay connected with university announcements, academic updates, events and important notices from one centralized digital platform.
             </p>
             <div class="flex flex-wrap gap-3 mt-7">
+              <router-link v-if="user?.role === 'admin'" to="/admin" class="premium-btn-primary">Create / Manage Announcements</router-link>
               <router-link to="/feed" class="flex items-center gap-2 bg-[#FFD60A] text-[#0A0A0A] px-5 py-3 rounded-xl font-bold text-sm hover:bg-[#FFEA70] transition">
                 <AppIcon name="megaphone" :size="17" /> Browse Notices
               </router-link>
-              <button type="button" class="flex items-center gap-2 bg-transparent border border-[#3A3A3A] text-white px-5 py-3 rounded-xl font-bold text-sm hover:border-[#FFD60A] hover:text-[#FFD60A] transition">
+              <router-link to="/events" class="flex items-center gap-2 bg-transparent border border-[#3A3A3A] text-white px-5 py-3 rounded-xl font-bold text-sm hover:border-[#FFD60A] hover:text-[#FFD60A] transition">
                 <AppIcon name="calendar" :size="17" /> View Events
-              </button>
+              </router-link>
             </div>
           </div>
 
@@ -40,18 +41,19 @@
                 <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-[#FFD60A] rounded-full" :style="{ width: `${viewedPercent}%` }"></div></div>
               </div>
               <div>
-                <div class="flex justify-between text-xs mb-2"><span class="text-[#A3A3A3]">Weekly activity</span><span class="font-bold">{{ activityPercent }}%</span></div>
-                <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-[#F5F5F5] rounded-full" :style="{ width: `${activityPercent}%` }"></div></div>
+                <div class="flex justify-between text-xs mb-2"><span class="text-[#A3A3A3]">Notices saved</span><span class="font-bold">{{ savedPercent }}%</span></div>
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-[#F5F5F5] rounded-full" :style="{ width: `${savedPercent}%` }"></div></div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
+      <button class="premium-btn-secondary mt-5" :disabled="loading" @click="loadDashboard">Refresh dashboard</button>
       <section class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mt-7">
         <DashboardStatCard title="Total Notices" :value="stats.total" description="Available to your account" icon-name="megaphone" />
         <DashboardStatCard title="Unread Notices" :value="stats.unread" description="Needs your attention" icon-name="bell" />
-        <DashboardStatCard title="Campus Events" :value="stats.events" description="Event announcements" icon-name="calendar" />
+        <DashboardStatCard title="University Events" :value="stats.events" description="Event announcements" icon-name="calendar" />
         <DashboardStatCard title="Saved Notices" :value="stats.saved" description="Your collection" :positive="false" icon-name="bookmark" />
       </section>
 
@@ -68,9 +70,10 @@
           </div>
 
           <div v-if="loading" class="p-6 text-sm text-[var(--text-secondary)]">Loading recent notices...</div>
-          <div v-else-if="recentNotices.length === 0" class="p-8 text-center text-[var(--text-secondary)]">No notices available yet.</div>
-          <div v-else class="divide-y divide-[var(--border)]">
-            <div v-for="notice in recentNotices" :key="notice.id" class="p-6 hover:bg-[var(--surface-hover)] transition cursor-pointer group">
+          <div v-if="error" role="alert" class="p-6 text-red-500">{{ error }} <button class="underline" @click="loadDashboard">Retry</button></div>
+          <div v-if="!loading && !error && recentNotices.length === 0" class="p-8 text-center text-[var(--text-secondary)]">No notices available yet.</div>
+          <div v-if="!loading && recentNotices.length" class="divide-y divide-[var(--border)]">
+            <router-link v-for="notice in recentNotices" :key="notice.id" to="/feed" class="block p-6 hover:bg-[var(--surface-hover)] transition cursor-pointer group">
               <div class="flex gap-4">
                 <div class="w-12 h-12 rounded-2xl shrink-0 bg-[#FFD60A] text-[#0A0A0A] flex items-center justify-center">
                   <AppIcon :name="noticeIcon(notice.category)" :size="20" />
@@ -85,7 +88,7 @@
                 </div>
                 <AppIcon name="chevron-right" :size="19" class="hidden md:block self-center text-[var(--text-muted)] group-hover:text-[#FFD60A] transition" />
               </div>
-            </div>
+            </router-link>
           </div>
         </div>
 
@@ -98,15 +101,17 @@
               </div>
               <div class="w-10 h-10 rounded-xl bg-[#FFD60A] text-[#0A0A0A] flex items-center justify-center"><AppIcon name="calendar" :size="19" /></div>
             </div>
-            <div class="space-y-5 mt-6">
-              <div v-for="event in events" :key="event.title" class="flex items-center gap-4">
+            <p v-if="!events.length" class="mt-6 text-sm text-[var(--text-secondary)]">No upcoming events yet.</p>
+            <div v-else class="space-y-5 mt-6">
+              <router-link v-for="event in events" :key="event.id" to="/events" class="flex items-center gap-4 hover:opacity-80 transition">
                 <div class="w-14 h-16 rounded-2xl bg-[var(--surface-soft)] border border-[var(--border)] flex flex-col items-center justify-center shrink-0">
-                  <span class="text-[10px] text-[#8A7200] dark:text-[#FFD60A] uppercase font-bold">{{ event.month }}</span>
-                  <span class="text-xl font-black text-[var(--text-main)]">{{ event.day }}</span>
+                  <span class="text-[10px] text-[#8A7200] dark:text-[#FFD60A] uppercase font-bold">{{ eventMonth(event.eventDate) }}</span>
+                  <span class="text-xl font-black text-[var(--text-main)]">{{ eventDay(event.eventDate) }}</span>
                 </div>
-                <div><h3 class="text-sm font-bold text-[var(--text-main)]">{{ event.title }}</h3><p class="text-xs text-[var(--text-secondary)] mt-1">{{ event.location }}</p></div>
-              </div>
+                <div><h3 class="text-sm font-bold text-[var(--text-main)]">{{ event.title }}</h3><p class="text-xs text-[var(--text-secondary)] mt-1">{{ event.eventLocation || 'Location to be announced' }}</p></div>
+              </router-link>
             </div>
+            <router-link to="/events" class="inline-block mt-5 text-sm font-bold text-[#8A7200] dark:text-[#FFD60A]">View all events →</router-link>
           </div>
 
           <div class="relative overflow-hidden bg-[#202020] rounded-3xl p-6 text-white border border-[#303030]">
@@ -126,7 +131,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import AppLayout from '../layouts/AppLayout.vue';
 import DashboardStatCard from '../components/DashboardStatCard.vue';
 import AppIcon from '../components/AppIcon.vue';
@@ -136,16 +141,15 @@ import noticeService from '../services/noticeService';
 const user = computed(() => authService.getCurrentUser());
 const firstName = computed(() => user.value?.name?.split(' ')[0] || 'Student');
 const loading = ref(false);
+const error = ref('');
 const recentNotices = ref([]);
 const stats = reactive({ total: 0, unread: 0, events: 0, saved: 0 });
-const events = [
-  { month: 'SEP', day: '23', title: 'Project Evaluation', location: 'Engineering Faculty' },
-  { month: 'SEP', day: '27', title: 'Technology Exhibition', location: 'Main Auditorium' },
-  { month: 'OCT', day: '02', title: 'Academic Workshop', location: 'Computer Engineering' },
-];
+const events = ref([]);
+const eventMonth = date => new Date(date).toLocaleString('en-GB', { month: 'short' });
+const eventDay = date => new Date(date).getDate();
 
 const viewedPercent = computed(() => stats.total ? Math.max(0, Math.min(100, Math.round(((stats.total - stats.unread) / stats.total) * 100))) : 0);
-const activityPercent = computed(() => Math.min(100, 40 + recentNotices.value.length * 12));
+const savedPercent = computed(() => stats.total ? Math.min(100, Math.round((stats.saved / stats.total) * 100)) : 0);
 
 const relativeDate = (value) => {
   if (!value) return 'Recently';
@@ -166,20 +170,29 @@ const noticeIcon = (category) => {
 
 const loadDashboard = async () => {
   loading.value = true;
+  error.value = '';
   try {
-    const [{ data, meta }, unread, eventsResult] = await Promise.all([
+    const results = await Promise.allSettled([
       noticeService.getAll({ page: 1, limit: 3 }),
-      noticeService.getUnreadCount().catch(() => 0),
-      noticeService.getAll({ category: 'Events', page: 1, limit: 1 }).catch(() => ({ meta: { total: 0 } })),
+      noticeService.getUnreadCount(),
+      noticeService.getUpcomingEvents(),
+      noticeService.getSaved()
     ]);
-    recentNotices.value = data || [];
-    stats.total = meta?.total || 0;
-    stats.unread = unread || 0;
-    stats.events = eventsResult?.meta?.total || 0;
-  } finally {
-    loading.value = false;
-  }
+    const [noticeResult, unread, eventsResult, savedResult] = results.map(r => r.status === 'fulfilled' ? r.value : {});
+    if (results[0].status === 'rejected') throw results[0].reason;
+    if (results.some(r => r.status === 'rejected')) error.value = 'Some dashboard counts could not load. Please retry.';
+    recentNotices.value = noticeResult.data || [];
+    stats.total = noticeResult.meta?.total || 0;
+    stats.unread = typeof unread === 'number' ? unread : 0;
+    stats.events = eventsResult.meta?.total || 0;
+    stats.saved = savedResult.data?.length || 0;
+    events.value = (eventsResult.data || []).slice(0, 3);
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Unable to load your dashboard.';
+  } finally { loading.value = false; }
 };
 
-onMounted(loadDashboard);
+const refreshOnFocus = () => { if (!loading.value) loadDashboard(); };
+onMounted(() => { loadDashboard(); window.addEventListener('focus', refreshOnFocus); });
+onUnmounted(() => window.removeEventListener('focus', refreshOnFocus));
 </script>

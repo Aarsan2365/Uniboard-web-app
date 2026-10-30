@@ -106,7 +106,8 @@ const user = computed(() => authService.getCurrentUser());
 const { isDark, toggleTheme } = useTheme();
 
 const handleLogout = () => {
+  const loginPath = authService.loginPathFor(user.value?.role);
   authService.logout();
-  router.push({ name: 'login' });
+  router.replace(loginPath);
 };
 </script>

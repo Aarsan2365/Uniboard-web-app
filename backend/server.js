@@ -17,6 +17,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/api', apiLimiter);
+app.use('/documents', notFound);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', authRoutes);
@@ -27,14 +28,37 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'UniBoard API is running.', database: 'MongoDB' });
 });
 
+const frontendDist = path.join(__dirname, '../frontend/dist');
+if (require('fs').existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) return next();
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+}
+
 app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'replace_with_a_long_random_secret') {
+    throw new Error('Set a unique JWT_SECRET in backend/.env before starting.');
+  }
   await connectDB();
-  app.listen(PORT, () => logger.info(`UniBoard API listening on http://localhost:${PORT}`));
+  const server = app.listen(PORT, () => logger.info(`UniBoard API listening on http://localhost:${PORT}`));
+  server.on('error', err => {
+    logger.error(err.code === 'EADDRINUSE' ? `Port ${PORT} is already in use. Stop the old backend before starting a new one.` : 'Server listen failed', err);
+    process.exitCode = 1;
+  });
+  return server;
 };
 
-startServer();
+if (require.main === module) {
+  startServer().catch(err => {
+    logger.error('Server startup failed', err);
+    process.exitCode = 1;
+  });
+}
+module.exports = { app, startServer };

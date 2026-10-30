@@ -19,14 +19,15 @@
         </div>
 
         <button type="submit" :disabled="loading" class="premium-btn-primary w-full mt-6 py-3">{{ loading ? 'Creating reset link...' : 'Reset Password' }}</button>
-        <router-link to="/login" class="block text-center text-sm text-[#8A7200] dark:text-[#FFD60A] font-semibold mt-5 hover:underline">Back to Login</router-link>
+        <router-link :to="loginPath" class="block text-center text-sm text-[#8A7200] dark:text-[#FFD60A] font-semibold mt-5 hover:underline">Back to {{ loginPath === '/admin/login' ? 'Admin' : 'Student' }} Login</router-link>
       </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import AppIcon from '../components/AppIcon.vue';
 import authService from '../services/authService';
 
@@ -35,6 +36,8 @@ const loading = ref(false);
 const message = ref('');
 const error = ref('');
 const devResetUrl = ref('');
+const route = useRoute();
+const loginPath = computed(() => authService.loginPathFor(route.query.portal));
 
 const submitRequest = async () => {
   message.value = '';

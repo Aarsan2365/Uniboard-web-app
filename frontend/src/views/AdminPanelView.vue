@@ -17,7 +17,9 @@
             <p class="text-xs text-[var(--text-secondary)] mt-1">Publish announcements to students.</p>
           </div>
         </div>
-        <NoticeForm :initial-notice="editingNotice" @submit="handleSubmit" @cancel="editingNotice = null" />
+        <NoticeForm :key="formKey" :initial-notice="editingNotice" :submitting="submitting" @submit="handleSubmit" @cancel="editingNotice = null" />
+        <p v-if="formError" role="alert" class="mt-3 text-sm text-red-500">{{ formError }}</p>
+        <p v-if="formSuccess" role="status" class="mt-3 text-sm text-emerald-500">{{ formSuccess }}</p>
       </div>
 
       <div class="bg-[var(--surface)] border border-[var(--border)] rounded-3xl p-5 md:p-7 shadow-sm">
@@ -39,6 +41,7 @@
           </div>
         </div>
 
+        <p v-else-if="listError" role="alert" class="mt-6 text-sm text-red-500">{{ listError }} <button class="underline" @click="loadNotices(1)">Retry</button></p>
         <div v-else-if="notices.length === 0" class="text-center py-12">
           <div class="mx-auto h-14 w-14 rounded-2xl bg-[#FFD60A] text-[#0A0A0A] flex items-center justify-center"><AppIcon name="inbox" :size="25" /></div>
           <p class="font-bold text-[var(--text-main)] mt-4">No notices found</p>
@@ -50,7 +53,7 @@
             :key="notice.id"
             :notice="notice"
             :editable="true"
-            @edit="editingNotice = $event"
+            @edit="startEdit"
             @delete="handleDelete"
             @show-reads="viewingReadsFor = $event"
           />
@@ -73,7 +76,13 @@ import Pagination from '../components/Pagination.vue';
 import ReadReceiptsModal from '../components/ReadReceiptsModal.vue';
 import noticeService from '../services/noticeService';
 
+const startEdit = notice => { editingNotice.value = notice; formError.value = ''; formSuccess.value = ''; window.scrollTo({ top: 0, behavior: 'smooth' }); };
 const notices = ref([]);
+const submitting = ref(false);
+const formKey = ref(0);
+const formError = ref('');
+const formSuccess = ref('');
+const listError = ref('');
 const loading = ref(false);
 const editingNotice = ref(null);
 const viewingReadsFor = ref(null);
@@ -85,28 +94,48 @@ const debouncedSearch = () => { clearTimeout(searchDebounceTimer); searchDebounc
 
 const loadNotices = async (targetPage = page.value) => {
   loading.value = true;
+  listError.value = '';
   try {
     const { data, meta } = await noticeService.getAll({ search: search.value || undefined, page: targetPage, limit: 10 });
     notices.value = data;
     page.value = meta.page;
     totalPages.value = meta.pages || 1;
+  } catch (err) {
+    listError.value = err.response?.data?.message || 'Unable to load notices.';
   } finally { loading.value = false; }
 };
 
 const handleSubmit = async (formData) => {
-  if (editingNotice.value) {
-    await noticeService.update(editingNotice.value.id, formData);
+  if (submitting.value) return;
+  submitting.value = true;
+  formError.value = '';
+  formSuccess.value = '';
+  try {
+    if (editingNotice.value) {
+      await noticeService.update(editingNotice.value.id, formData);
+      formSuccess.value = 'Notice updated successfully.';
+    } else {
+      await noticeService.create(formData);
+      formSuccess.value = 'Notice published successfully.';
+    }
     editingNotice.value = null;
-  } else {
-    await noticeService.create(formData);
-  }
-  await loadNotices(1);
+    formKey.value++;
+    await loadNotices(1);
+  } catch (err) {
+    formError.value = err.response?.data?.message || err.message || 'Unable to save notice.';
+  } finally { submitting.value = false; }
 };
 
 const handleDelete = async (notice) => {
   if (!confirm(`Delete "${notice.title}"? This cannot be undone.`)) return;
-  await noticeService.remove(notice.id);
-  await loadNotices();
+  formError.value = '';
+  try {
+    await noticeService.remove(notice.id);
+    if (editingNotice.value?.id === notice.id) editingNotice.value = null;
+    await loadNotices(notices.value.length === 1 ? Math.max(1, page.value - 1) : page.value);
+  } catch (err) {
+    formError.value = err.response?.data?.message || 'Unable to delete notice.';
+  }
 };
 
 onMounted(() => loadNotices(1));

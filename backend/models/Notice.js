@@ -2,8 +2,19 @@ const mongoose = require('mongoose');
 
 const noticeSchema = new mongoose.Schema(
   {
+    eventDate: {
+      type: Date,
+      default: null
+    },
+    
+    eventLocation: {
+      type: String,
+      trim: true,
+      maxlength: 160,
+      default: ''
+    },
     title: { type: String, required: true, trim: true, maxlength: 150 },
-    body: { type: String, required: true, trim: true },
+    body: { type: String, required: true, trim: true, maxlength: 10000 },
     category: {
       type: String,
       enum: ['Exam Schedules', 'Sports', 'General', 'Events', 'Academic'],
@@ -11,9 +22,11 @@ const noticeSchema = new mongoose.Schema(
       required: true,
     },
     imageUrl: { type: String, default: null },
+    pdfUrl: { type: String, default: null },
+    pdfName: { type: String, default: '', maxlength: 160 },
     targetBatch: {
       type: String,
-      enum: ['All', '2021', '2022', '2023', '2024', '2025'],
+      enum: ['All', '2021', '2022', '2023', '2024', '2025', '2026'],
       default: 'All',
       required: true,
     },

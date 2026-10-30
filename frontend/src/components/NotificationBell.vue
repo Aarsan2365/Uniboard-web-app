@@ -1,5 +1,5 @@
 <template>
-  <div class="relative flex items-center group cursor-pointer p-2 rounded-xl hover:bg-[var(--surface-hover)] transition-colors">
+  <router-link to="/feed" title="Open notices" aria-label="Open notice feed" class="relative flex items-center group cursor-pointer p-2 rounded-xl hover:bg-[var(--surface-hover)] transition-colors">
     <AppIcon name="bell" :size="19" class="text-[var(--text-secondary)] group-hover:text-[#8A7200] dark:group-hover:text-[#FFD60A] transition-colors" />
     <span
       v-if="unreadCount > 0"
@@ -7,7 +7,7 @@
     >
       {{ unreadCount > 9 ? '9+' : unreadCount }}
     </span>
-  </div>
+  </router-link>
 </template>
 
 <script setup>

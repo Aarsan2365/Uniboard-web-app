@@ -12,7 +12,9 @@
       <div class="hidden md:block relative max-w-[540px] w-full">
         <AppIcon name="search" :size="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
         <input
-          type="text"
+          v-model="searchQuery"
+          type="search"
+          @keydown.enter="submitSearch"
           placeholder="Search notices, events, announcements..."
           class="w-full h-12 bg-[var(--surface-soft)] border border-[var(--border)] rounded-xl pl-11 pr-4 text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] outline-none focus:border-[#FFD60A] focus:ring-4 focus:ring-yellow-400/10 transition-all duration-200"
         />
@@ -65,12 +67,9 @@
                 </div>
               </div>
 
-              <button type="button" class="profile-item">
-                <AppIcon name="user" :size="18" /> My Profile
-              </button>
-              <button type="button" class="profile-item">
-                <AppIcon name="settings" :size="18" /> Settings
-              </button>
+              <router-link to="/settings" class="profile-item" @click="closeProfileMenu">
+                <AppIcon name="user" :size="18" /> Profile & Settings
+              </router-link>
               <div class="border-t border-[var(--border)]">
                 <button type="button" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-500/10 transition" @click="logout">
                   <AppIcon name="logout" :size="18" /> Logout
@@ -86,6 +85,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import AppIcon from './AppIcon.vue';
 import NotificationBell from './NotificationBell.vue';
 import authService from '../services/authService';
@@ -94,6 +94,9 @@ import { useTheme } from '../composables/useTheme';
 defineProps({ notificationRefreshKey: { type: Number, default: 0 } });
 defineEmits(['toggleSidebar']);
 
+const router = useRouter();
+const searchQuery = ref('');
+const submitSearch = () => router.push({ path: '/feed', query: searchQuery.value.trim() ? { search: searchQuery.value.trim() } : {} });
 const user = computed(() => authService.getCurrentUser());
 const userInitial = computed(() => user.value?.name?.charAt(0)?.toUpperCase() || 'U');
 const profileMenuOpen = ref(false);
@@ -101,8 +104,9 @@ const toggleProfileMenu = () => { profileMenuOpen.value = !profileMenuOpen.value
 const closeProfileMenu = () => { profileMenuOpen.value = false; };
 const logout = () => {
   profileMenuOpen.value = false;
+  const loginPath = authService.loginPathFor(user.value?.role);
   authService.logout();
-  window.location.replace('/login');
+  window.location.replace(loginPath);
 };
 const { isDark, toggleTheme } = useTheme();
 

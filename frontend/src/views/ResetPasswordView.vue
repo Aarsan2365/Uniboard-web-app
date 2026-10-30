@@ -11,13 +11,13 @@
         <div>
           <label class="block text-sm font-bold text-[var(--text-secondary)]">New Password</label>
           <div class="relative mt-2">
-            <input v-model="password" :type="showPassword ? 'text' : 'password'" required minlength="6" class="premium-input pr-12" />
+            <input v-model="password" :type="showPassword ? 'text' : 'password'" required minlength="8" class="premium-input pr-12" />
             <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" @click="showPassword = !showPassword"><AppIcon :name="showPassword ? 'eye-off' : 'eye'" :size="18" /></button>
           </div>
         </div>
         <div>
           <label class="block text-sm font-bold text-[var(--text-secondary)]">Confirm Password</label>
-          <input v-model="confirmPassword" type="password" required minlength="6" class="premium-input mt-2" />
+          <input v-model="confirmPassword" type="password" required minlength="8" class="premium-input mt-2" />
         </div>
         <p v-if="error" class="text-sm text-red-600 dark:text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-xl">{{ error }}</p>
         <p v-if="message" class="text-sm text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl">{{ message }}</p>
@@ -45,13 +45,14 @@ const message = ref('');
 const handleResetPassword = async () => {
   error.value = '';
   message.value = '';
-  if (password.value.length < 6) { error.value = 'Password must contain at least 6 characters.'; return; }
+  if (password.value.length < 8) { error.value = 'Password must contain at least 8 characters.'; return; }
   if (password.value !== confirmPassword.value) { error.value = 'Passwords do not match.'; return; }
   loading.value = true;
   try {
     const result = await authService.resetPassword(route.params.token, password.value);
     message.value = result.message;
-    setTimeout(() => router.replace('/login'), 1200);
+    authService.logout();
+    await router.replace(authService.loginPathFor(route.query.portal));
   } catch (err) {
     error.value = err.response?.data?.message || 'Unable to reset password. The link may have expired.';
   } finally {

@@ -1,82 +1,44 @@
-// services/noticeService.js
-//
-// Every function here maps to a backend route. Components call these
-// instead of using axios directly — keeps REST API details out of
-// the Vue components entirely.
-//
-// create/update build a FormData payload so an optional image file
-// can ride alongside the text fields as multipart/form-data; the
-// backend (multer) only kicks in when the content-type is multipart,
-// so this doesn't change anything for the no-image case.
-
 import api from './api';
-
-const buildFormData = (notice) => {
-  const formData = new FormData();
-  formData.append('title', notice.title);
-  formData.append('body', notice.body);
-  formData.append('category', notice.category);
-  if (notice.targetBatch) {
-    formData.append('targetBatch', notice.targetBatch);
+const buildFormData = notice => {
+  const form = new FormData();
+  form.append('title', notice.title);
+  form.append('body', notice.body);
+  form.append('category', notice.category);
+  form.append('targetBatch', notice.targetBatch || 'All');
+  if (notice.removeImage) form.append('removeImage', 'true');
+  if (notice.removePdf) form.append('removePdf', 'true');
+  if (notice.category === 'Events') {
+    form.append('eventDate', new Date(notice.eventDate).toISOString());
+    form.append('eventLocation', notice.eventLocation);
   }
-  if (notice.image) {
-    formData.append('image', notice.image);
+  if (notice.image) form.append('image', notice.image);
+  if (notice.pdf) form.append('pdf', notice.pdf);
+  return form;
+};
+const getAll = async (params = {}) => (await api.get('/notices', { params })).data;
+const getById = async id => (await api.get(`/notices/${id}`)).data;
+const getPdf = async (id, { download = false, signal } = {}) => {
+  try {
+    return (await api.get(`/notices/${id}/pdf`, { responseType: 'blob', params: download ? { download: '1' } : {}, signal })).data;
+  } catch (error) {
+    // Binary requests also receive JSON errors, for example when a file is missing.
+    if (error.response?.data instanceof Blob) {
+      try { error.response.data = JSON.parse(await error.response.data.text()); } catch { /* Keep the original error. */ }
+    }
+    throw error;
   }
-  return formData;
 };
-
-// params: { category, search, page, limit }
-const getAll = async (params = {}) => {
-  const { data } = await api.get('/notices', { params });
-  return data; // { data: [...], meta: { total, page, pages, limit } }
-};
-
-const getById = async (id) => {
-  const { data } = await api.get(`/notices/${id}`);
-  return data;
-};
-
-const create = async (notice) => {
-  const { data } = await api.post('/notices', buildFormData(notice), {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return data;
-};
-
-const update = async (id, notice) => {
-  const { data } = await api.put(`/notices/${id}`, buildFormData(notice), {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return data;
-};
-
-const remove = async (id) => {
-  const { data } = await api.delete(`/notices/${id}`);
-  return data;
-};
-
-const markAsRead = async (id) => {
-  const { data } = await api.post(`/notices/${id}/read`);
-  return data;
-};
-
-const getReadReceipts = async (id) => {
-  const { data } = await api.get(`/notices/${id}/reads`);
-  return data; // { count, readers: [{ id, name, email, readAt }] }
-};
-
-const getUnreadCount = async () => {
-  const { data } = await api.get('/notices/unread-count');
-  return data.unreadCount;
-};
-
+const create = async notice => (await api.post('/notices', buildFormData(notice))).data;
+const update = async (id, notice) => (await api.put(`/notices/${id}`, buildFormData(notice))).data;
+const remove = async id => (await api.delete(`/notices/${id}`)).data;
+const markAsRead = async id => (await api.post(`/notices/${id}/read`)).data;
+const getReadReceipts = async id => (await api.get(`/notices/${id}/reads`)).data;
+const getUnreadCount = async () => (await api.get('/notices/unread-count')).data.unreadCount;
+const getSaved = async () => (await api.get('/notices/saved')).data;
+const save = async id => (await api.post(`/notices/${id}/save`)).data;
+const unsave = async id => (await api.delete(`/notices/${id}/save`)).data;
+const getUpcomingEvents = async () => (await api.get('/notices/events/upcoming')).data;
 export default {
-  getAll,
-  getById,
-  create,
-  update,
-  remove,
-  markAsRead,
-  getReadReceipts,
-  getUnreadCount,
+  getAll, getById, getPdf, create, update, remove, markAsRead,
+  getReadReceipts, getUnreadCount, getSaved, save, unsave, getUpcomingEvents
 };

@@ -1,0 +1,8 @@
+erDiagram
+  User ||--o{ Notice : publishes
+  User ||--o{ Comment : writes
+  Notice ||--o{ Comment : has
+  User ||--o{ SavedNotice : saves
+  Notice ||--o{ SavedNotice : bookmarked
+  User ||--o{ NoticeRead : reads
+  Notice ||--o{ NoticeRead : tracked

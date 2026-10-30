@@ -20,34 +20,43 @@ const publicUser = (user) => ({
 
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, role, batch } = req.body;
+    const { name, email, password, batch } = req.body;
     const existing = await User.findOne({ email });
     if (existing) return next(new AppError('An account with this email already exists.', 409));
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const resolvedRole = role === 'admin' ? 'admin' : 'student';
-    const resolvedBatch = resolvedRole === 'admin' ? 'N/A' : (batch || 'N/A');
+    const resolvedRole = 'student'; // Public registration must never grant admin access.
+    const resolvedBatch = batch || 'N/A';
 
     const user = await User.create({ name, email, password: hashedPassword, role: resolvedRole, batch: resolvedBatch });
-    res.status(201).json({ token: signToken(user), user: publicUser(user) });
+    res.status(201).json({ message: 'Student account created. Please sign in.', user: publicUser(user) });
   } catch (err) {
     if (err?.code === 11000) return next(new AppError('An account with this email already exists.', 409));
     next(err);
   }
 };
 
-const login = async (req, res, next) => {
+// The route fixes the expected role. A submitted role can never choose a portal.
+const loginForRole = expectedRole => async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return next(new AppError('Invalid email or password.', 401));
     }
+    if (user.role !== expectedRole) {
+      const message = expectedRole === 'student'
+        ? 'This is an administrator account. Please use Admin Login.'
+        : 'Admin Login is only for administrator accounts. Please use Student Login.';
+      return next(new AppError(message, 403));
+    }
     res.status(200).json({ token: signToken(user), user: publicUser(user) });
   } catch (err) {
     next(err);
   }
 };
+const login = loginForRole('student');
+const adminLogin = loginForRole('admin');
 
 const forgotPassword = async (req, res, next) => {
   try {
@@ -63,8 +72,8 @@ const forgotPassword = async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
-    console.log(`\n🔐 Development password reset link:\n${resetUrl}\n`);
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}${user.role === 'admin' ? '?portal=admin' : ''}`;
+    if (process.env.NODE_ENV !== 'production') console.log(`\n🔐 Development password reset link:\n${resetUrl}\n`);
 
     const payload = { message: genericMessage };
     if (process.env.NODE_ENV !== 'production') payload.resetUrl = resetUrl;
@@ -95,4 +104,17 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, forgotPassword, resetPassword };
+const getMe = async (req, res, next) => {
+  try { res.json({ user: publicUser(await User.findById(req.user.id)) }); }
+  catch (error) { next(error); }
+};
+const updateProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    user.name = req.body.name;
+    if (user.role === 'student') user.batch = req.body.batch;
+    await user.save();
+    res.json({ user: publicUser(user) });
+  } catch (error) { next(error); }
+};
+module.exports = { register, login, adminLogin, forgotPassword, resetPassword, getMe, updateProfile };

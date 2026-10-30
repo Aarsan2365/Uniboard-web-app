@@ -13,6 +13,7 @@
       </div>
 
       <p v-if="loading" class="text-xs text-slate-400 animate-pulse py-4 text-center">Loading receipt logs...</p>
+      <p v-else-if="error" role="alert" class="text-red-500 text-sm">{{ error }}</p>
       <ul v-else-if="readers.length" class="space-y-2.5 max-h-60 overflow-y-auto pr-1">
         <li v-for="r in readers" :key="r.id" class="text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60 px-3 py-2 rounded-lg">
           <div class="flex items-center gap-2">
@@ -41,6 +42,7 @@ const props = defineProps({
 defineEmits(['close']);
 
 const readers = ref([]);
+const error = ref('');
 const count = ref(0);
 const loading = ref(true);
 
@@ -49,7 +51,7 @@ onMounted(async () => {
     const result = await noticeService.getReadReceipts(props.noticeId);
     readers.value = result.readers;
     count.value = result.count;
-  } finally {
+  } catch (err) { error.value = err.response?.data?.message || err.message; } finally {
     loading.value = false;
   }
 });
