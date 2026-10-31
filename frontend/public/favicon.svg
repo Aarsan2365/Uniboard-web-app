@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>UniBoard</title>
+  <rect width="64" height="64" rx="16" fill="#FFD60A"/>
+  <g transform="translate(7 8) scale(2.1)" fill="none" stroke="#0A0A0A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 10l10-5 10 5-10 5-10-5z"/>
+    <path d="M6 12v5c3 2 9 2 12 0v-5"/>
+  </g>
+</svg>
