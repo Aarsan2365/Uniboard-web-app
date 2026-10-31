@@ -1,3 +1,5 @@
+> **Netlify update (31 October 2026):** See [DEPLOY-NETLIFY.md](../DEPLOY-NETLIFY.md). Netlify uses Express Functions, MongoDB GridFS attachments, and 2 MiB per file. Instructions below describing local uploads/5 MiB remain for local-server mode. Production email reset delivery still requires an email provider.
+
 # PDF attachments
 
 An announcement can contain one poster image, one PDF document, both, or neither. The title and announcement text are still required. The limit is 5 MB for each attachment.

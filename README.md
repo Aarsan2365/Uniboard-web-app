@@ -1,3 +1,5 @@
+> **Netlify update (31 October 2026):** See [DEPLOY-NETLIFY.md](DEPLOY-NETLIFY.md). Netlify uses Express Functions, MongoDB GridFS attachments, and 2 MiB per file. Instructions below describing local uploads/5 MiB remain for local-server mode. Production email reset delivery still requires an email provider.
+
 # UniBoard — Digital Campus Notice Board
 
 Vue 3 + Vite + Tailwind CSS frontend, Express/Node.js backend, and MongoDB/Mongoose database.

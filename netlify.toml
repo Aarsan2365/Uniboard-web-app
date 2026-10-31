@@ -1,9 +1,34 @@
 [build]
-  command = "npm --prefix frontend ci --include=dev && npm --prefix frontend run build"
+  command = "npm --prefix backend ci --omit=dev && npm --prefix frontend ci --include=dev && npm --prefix frontend run build"
   publish = "frontend/dist"
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "24"
+  VITE_ATTACHMENT_MAX_MB = "2"
+
+[functions]
+  node_bundler = "esbuild"
+
+# API and image rewrites MUST appear before the Vue fallback.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/uploads/*"
+  to = "/.netlify/functions/api/uploads/:splat"
+  status = 200
+  force = true
+
+# Never publish private PDFs as static assets.
+[[redirects]]
+  from = "/documents/*"
+  to = "/.netlify/functions/api/documents/:splat"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/*"

@@ -71,7 +71,7 @@ const forgotPassword = async (req, res, next) => {
     user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
     await user.save({ validateBeforeSave: false });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || process.env.URL || 'http://localhost:5173';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}${user.role === 'admin' ? '?portal=admin' : ''}`;
     if (process.env.NODE_ENV !== 'production') console.log(`\n🔐 Development password reset link:\n${resetUrl}\n`);
 

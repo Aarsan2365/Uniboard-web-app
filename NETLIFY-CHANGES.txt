@@ -1,0 +1,41 @@
+Modified baseline files:
+FIXES-AND-TESTS.md
+README.md
+START-HERE.md
+backend/.env.example
+backend/config/db.js
+backend/controllers/authController.js
+backend/controllers/noticeController.js
+backend/middlewares/errorHandler.js
+backend/middlewares/rateLimiter.js
+backend/middlewares/upload.js
+backend/package-lock.json
+backend/package.json
+backend/routes/noticeRoutes.js
+backend/server.js
+backend/tests/adminSetup.test.js
+backend/tests/api.test.js
+backend/tests/auth.test.js
+backend/tests/feed.test.js
+backend/tests/pdf.test.js
+backend/tests/workflow.test.js
+backend/utils/logger.js
+backend/utils/uploadFiles.js
+docs/DATABASE.md
+docs/PDF-ATTACHMENTS.md
+frontend/src/components/NoticeForm.vue
+frontend/src/services/api.js
+netlify.toml
+
+Added source files:
+DEPLOY-NETLIFY.md
+.node-version
+backend/tests/netlify.test.js
+backend/tests/storage.test.js
+backend/utils/attachmentStore.js
+backend/utils/storagePaths.js
+backend/utils/mongoRateStore.js
+backend/scripts/migrateUploads.js
+netlify/functions/api.js
+
+Validation: 11 backend tests passed; Netlify handler boundary request test passed; frontend production build passed; esbuild-bundled function connected to disposable MongoDB and registered/logged in a student. Live Netlify/Atlas credentials were not accessed.

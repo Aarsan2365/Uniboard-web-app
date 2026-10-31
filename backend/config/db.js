@@ -1,24 +1,14 @@
-// config/db.js
-// MongoDB connection using Mongoose.
-
 const mongoose = require('mongoose');
 require('dotenv').config();
-
+let pendingConnection;
 const connectDB = async () => {
-  const mongoUri = process.env.MONGODB_URI;
-
-  if (!mongoUri) {
-    console.error('❌ MONGODB_URI is missing from backend/.env');
-    process.exit(1);
+  if (mongoose.connection.readyState === 1) return mongoose.connection;
+  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is missing. Configure the backend environment.');
+  if (!pendingConnection) {
+    pendingConnection = mongoose.connect(process.env.MONGODB_URI, {
+      maxPoolSize: 5, serverSelectionTimeoutMS: 10000, connectTimeoutMS: 10000
+    }).then(() => mongoose.connection).finally(() => { pendingConnection = null; });
   }
-
-  try {
-    await mongoose.connect(mongoUri);
-    console.log(`✅ MongoDB connected: ${mongoose.connection.host}/${mongoose.connection.name}`);
-  } catch (error) {
-    console.error('❌ Unable to connect to MongoDB:', error.message);
-    process.exit(1);
-  }
+  return pendingConnection;
 };
-
 module.exports = { connectDB, mongoose };

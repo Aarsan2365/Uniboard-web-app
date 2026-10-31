@@ -2,8 +2,8 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const logger = require('./logger');
 const AppError = require('./AppError');
-const uploadDirectory = path.join(__dirname, '../uploads');
-const documentDirectory = path.join(__dirname, '../documents');
+const { uploadDirectory, documentDirectory } = require('./storagePaths');
+const attachmentStore = require('./attachmentStore');
 
 // PDF bytes are outside the public images directory. Only the audience-checked
 // notice endpoint may serve them; database paths cannot select arbitrary files.
@@ -17,6 +17,10 @@ const pdfName = file => {
 
 // Only remove a single local upload, never an external URL or a nested path.
 const removeUpload = async value => {
+  if (attachmentStore.enabled()) {
+    try { await attachmentStore.remove(value); }
+    catch (error) { logger.error('Could not remove a stored attachment', error); }
+  }
   let filePath = getPdfPath(value);
   if (!filePath && /^\/uploads\/[^/\\]+$/.test(value || '')) {
     const filename = value.slice('/uploads/'.length);
@@ -31,7 +35,7 @@ const cleanupRejectedUpload = (req, res, next) => {
   res.once('finish', () => {
     if (res.statusCode < 400 || req.uploadCommitted) return;
     const files = Object.values(req.files || {}).flat();
-    for (const file of files) removeUpload(`/${file.fieldname === 'pdf' ? 'documents' : 'uploads'}/${file.filename}`);
+    req.uploadCleanupPromise = Promise.all(files.map(file => removeUpload(`/${file.fieldname === 'pdf' ? 'documents' : 'uploads'}/${file.filename}`)));
   });
   next();
 };

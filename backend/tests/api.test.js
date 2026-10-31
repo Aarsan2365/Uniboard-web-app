@@ -1,3 +1,4 @@
+process.env.UPLOAD_STORAGE = 'local';
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { app } = require('../server');
@@ -11,11 +12,11 @@ async function withServer(run) {
   } finally { await new Promise(resolve => server.close(resolve)); }
 }
 
-test('API health route responds', async () => {
+test('API health reports an unavailable database honestly', async () => {
   await withServer(async base => {
     const response = await fetch(`${base}/api/health`);
-    assert.equal(response.status, 200);
-    assert.equal((await response.json()).database, 'MongoDB');
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).database, 'disconnected');
   });
 });
 

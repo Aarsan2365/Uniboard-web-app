@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const { connectDB } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
@@ -11,25 +11,30 @@ const commentRoutes = require('./routes/commentRoutes');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const { apiLimiter } = require('./middlewares/rateLimiter');
 const logger = require('./utils/logger');
+const attachmentStore = require('./utils/attachmentStore');
+const { serverless, uploadDirectory } = require('./utils/storagePaths');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+app.use('/api', (_req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 app.use('/api', apiLimiter);
 app.use('/documents', notFound);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.get('/uploads/:filename', attachmentStore.serveImage);
+app.use('/uploads', express.static(uploadDirectory));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/comments', commentRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'UniBoard API is running.', database: 'MongoDB' });
+  const connected = require('mongoose').connection.readyState === 1;
+  res.status(connected ? 200 : 503).json({ status: connected ? 'UniBoard API is running.' : 'Database is unavailable.', database: connected ? 'connected' : 'disconnected' });
 });
 
 const frontendDist = path.join(__dirname, '../frontend/dist');
-if (require('fs').existsSync(frontendDist)) {
+if (!serverless && require('fs').existsSync(frontendDist)) {
   app.use(express.static(frontendDist));
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) return next();
@@ -46,6 +51,7 @@ const startServer = async () => {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'replace_with_a_long_random_secret') {
     throw new Error('Set a unique JWT_SECRET in backend/.env before starting.');
   }
+  if (!['local', 'mongodb'].includes(process.env.UPLOAD_STORAGE || 'local')) throw new Error('UPLOAD_STORAGE must be local or mongodb.');
   await connectDB();
   const server = app.listen(PORT, () => logger.info(`UniBoard API listening on http://localhost:${PORT}`));
   server.on('error', err => {

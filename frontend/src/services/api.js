@@ -14,7 +14,12 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (typeof response.data === 'string' && /<(!doctype|html)/i.test(response.data)) {
+      throw new Error('The API returned a web page. Check the Netlify Function and /api routing.');
+    }
+    return response;
+  },
   (error) => {
     const payload = error.response?.data;
     if (payload?.errors?.length) payload.message = payload.errors.map(item => item.message).join(' ');

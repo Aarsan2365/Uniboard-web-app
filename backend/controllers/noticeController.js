@@ -3,6 +3,7 @@ const { Notice, NoticeRead, Comment, SavedNotice } = require('../models');
 const { audienceFilter } = require('../middlewares/noticeAccess');
 const AppError = require('../utils/AppError');
 const { removeUpload, getPdfPath, pdfName } = require('../utils/uploadFiles');
+const attachmentStore = require('../utils/attachmentStore');
 const sortOptions = {
   newest: { createdAt: -1, _id: -1 }, oldest: { createdAt: 1, _id: 1 },
   'title-asc': { title: 1, _id: 1 }, 'title-desc': { title: -1, _id: -1 }
@@ -155,6 +156,7 @@ const getNoticePdf = async (req, res, next) => {
     if (req.query.download !== '1') res.set('Content-Disposition', res.get('Content-Disposition').replace(/^attachment/, 'inline'));
     res.type('application/pdf');
     res.set({ 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' });
+    if (await attachmentStore.send(notice.pdfUrl, req, res)) return;
     res.sendFile(filePath, error => {
       if (!error) return;
       if (!res.headersSent) {

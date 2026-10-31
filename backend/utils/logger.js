@@ -1,30 +1,18 @@
-// utils/logger.js
-//
-// A deliberately lightweight logger (no external dependency beyond
-// what's already in the project) that timestamps messages and
-// persists errors to a file, on top of morgan's HTTP access logs.
-// Enough to demonstrate "the app has real logging" without pulling
-// in a heavy stack like Winston/ELK for a course project.
-
-const fs = require('fs');
-const path = require('path');
-
-const logDir = path.join(__dirname, '..', 'logs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
+const fs = require('node:fs');
+const path = require('node:path');
+const { serverless } = require('./storagePaths');
+let errorLogPath;
+if (!serverless) {
+  try {
+    const directory = path.join(__dirname, '..', 'logs');
+    fs.mkdirSync(directory, { recursive: true });
+    errorLogPath = path.join(directory, 'error.log');
+  } catch { /* Console logging remains available if local disk is read-only. */ }
 }
-const errorLogPath = path.join(logDir, 'error.log');
-
-const timestamp = () => new Date().toISOString();
-
-const info = (message) => {
-  console.log(`[INFO] ${timestamp()} - ${message}`);
-};
-
+const info = message => console.log(`[INFO] ${new Date().toISOString()} - ${message}`);
 const error = (message, err) => {
-  const line = `[ERROR] ${timestamp()} - ${message}${err ? ` - ${err.stack || err}` : ''}\n`;
+  const line = `[ERROR] ${new Date().toISOString()} - ${message}${err ? ` - ${err.stack || err}` : ''}\n`;
   console.error(line);
-  fs.appendFile(errorLogPath, line, () => {}); // fire-and-forget, never block the request
+  if (errorLogPath) fs.appendFile(errorLogPath, line, () => {});
 };
-
 module.exports = { info, error };

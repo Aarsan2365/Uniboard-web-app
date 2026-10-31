@@ -3,8 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const AppError = require('../utils/AppError');
-const uploadDir = path.join(__dirname, '..', 'uploads');
-const pdfDir = path.join(__dirname, '..', 'documents');
+const { uploadDirectory: uploadDir, documentDirectory: pdfDir, maxAttachmentBytes } = require('../utils/storagePaths');
 fs.mkdirSync(uploadDir, { recursive: true });
 fs.mkdirSync(pdfDir, { recursive: true });
 const extensions = {
@@ -30,5 +29,5 @@ module.exports = multer({
     }
     cb(null, true);
   },
-  limits: { fileSize: 5 * 1024 * 1024, files: 2, fields: 10, parts: 12 }
+  limits: { fileSize: maxAttachmentBytes, files: 2, fields: 10, parts: 12 }
 });

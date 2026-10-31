@@ -1,3 +1,5 @@
+> **Netlify update (31 October 2026):** See [DEPLOY-NETLIFY.md](../DEPLOY-NETLIFY.md). Netlify uses Express Functions, MongoDB GridFS attachments, and 2 MiB per file. Instructions below describing local uploads/5 MiB remain for local-server mode. Production email reset delivery still requires an email provider.
+
 # Database structure
 
 MongoDB contains five collections. Mongoose validates their structure and uses ObjectId references between documents. These references are logical application relationships rather than SQL foreign-key constraints.

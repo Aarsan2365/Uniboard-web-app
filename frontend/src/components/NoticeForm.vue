@@ -36,7 +36,7 @@
       <div>
         <label for="notice-image" class="field-label">Image attachment (optional)</label>
         <input id="notice-image" ref="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" @change="handleFileChange" class="premium-input text-sm" />
-        <p class="text-xs text-[var(--text-secondary)] mt-2">Upload a notice poster or photo. JPEG, PNG, WebP or GIF, up to 5 MB.</p>
+        <p class="text-xs text-[var(--text-secondary)] mt-2">Upload a notice poster or photo. JPEG, PNG, WebP or GIF, up to {{ attachmentMaxMB }} MB.</p>
         <p v-if="imageError" role="alert" class="text-sm text-red-500 mt-2">{{ imageError }} <button type="button" class="underline" @click="clearSelection">Clear selection</button></p>
         <div v-if="previewUrl" class="mt-3 rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface-soft)]">
           <img :src="previewUrl" alt="Announcement image preview" class="w-full max-h-80 object-contain" />
@@ -50,7 +50,7 @@
       <div>
         <label for="notice-pdf" class="field-label">PDF attachment (optional)</label>
         <input id="notice-pdf" ref="pdfInput" type="file" accept="application/pdf,.pdf" @change="handlePdfChange" class="premium-input text-sm" />
-        <p class="text-xs text-[var(--text-secondary)] mt-2">Attach one PDF document up to 5 MB. You can include both a poster image and a PDF.</p>
+        <p class="text-xs text-[var(--text-secondary)] mt-2">Attach one PDF document up to {{ attachmentMaxMB }} MB. You can include both a poster image and a PDF.</p>
         <p v-if="pdfError" role="alert" class="text-sm text-red-500 mt-2">{{ pdfError }} <button type="button" class="underline" @click="clearPdfSelection">Clear PDF selection</button></p>
         <div v-if="form.pdf" class="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4">
           <p class="font-semibold text-sm break-all">{{ form.pdf.name }}</p>
@@ -82,6 +82,7 @@ import NoticePdfAttachment from './NoticePdfAttachment.vue';
 import PdfViewer from './PdfViewer.vue';
 const props = defineProps({ initialNotice: { type: Object, default: null }, submitting: { type: Boolean, default: false } });
 const emit = defineEmits(['submit', 'cancel']);
+const attachmentMaxMB = Number(import.meta.env.VITE_ATTACHMENT_MAX_MB) || 5;
 const categories = ['General', 'Exam Schedules', 'Sports', 'Events', 'Academic'];
 const batches = ['All', '2021', '2022', '2023', '2024', '2025', '2026'];
 const blankForm = () => ({ title: '', body: '', category: 'General', targetBatch: 'All', image: null, removeImage: false, pdf: null, removePdf: false, eventDate: '', eventLocation: '' });
@@ -115,7 +116,7 @@ const handleFileChange = event => {
   releasePreview(); form.image = null; imageError.value = '';
   if (!file) return;
   if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) { imageError.value = 'Choose a JPEG, PNG, WebP or GIF image.'; return; }
-  if (file.size > 5 * 1024 * 1024) { imageError.value = 'Image size must not exceed 5 MB.'; return; }
+  if (file.size > attachmentMaxMB * 1024 * 1024) { imageError.value = `Image size must not exceed ${attachmentMaxMB} MB.`; return; }
   form.image = file; form.removeImage = false; previewObjectUrl.value = URL.createObjectURL(file);
 };
 const removeImage = () => { clearSelection(); form.removeImage = Boolean(props.initialNotice?.imageUrl); };
@@ -129,7 +130,7 @@ const handlePdfChange = event => {
   if (!file) return;
   if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== 'application/pdf')) { pdfError.value = 'Choose a PDF document (.pdf).'; return; }
   if (file.size === 0) { pdfError.value = 'The PDF file is empty. Choose another document.'; return; }
-  if (file.size > 5 * 1024 * 1024) { pdfError.value = 'PDF size must not exceed 5 MB.'; return; }
+  if (file.size > attachmentMaxMB * 1024 * 1024) { pdfError.value = `PDF size must not exceed ${attachmentMaxMB} MB.`; return; }
   form.pdf = file; form.removePdf = false; pdfObjectUrl.value = URL.createObjectURL(file);
 };
 const removePdf = () => { clearPdfSelection(); form.removePdf = Boolean(props.initialNotice?.pdfUrl); };
